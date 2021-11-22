@@ -72,19 +72,19 @@ class NoiseImage {
     circle(this.r + i, this.r + j, this.f * this.r * fac);
   }
 
-  add_contrast(x, y) {
-    return x * (x / y) * (x / y) * (x / y) * (x / y);
+  add_contrast(x, y, exp = 0.5, dropout = 0.7) {
+    return x * Math.pow((x / y), exp) * dropout;
   }
 
-  add_index_pix(n_it = 1, p = 255) { //n : number of shots p: circle intensity 
+  add_index_pix(n_it = 1, p = 255, exp = 0.5, dropout = 0.7) { //n : number of shots p: circle intensity 
 
 
-    fill(color(255, 255, 255, p / sqrt(n_it)));
+    fill(color(255, 255, 255));
     noStroke();
 
     if (this.index < this.img.length - 1) {
       for (let k = 0; k < n_it; k++) {
-        if (random(0, this.max_val) < this.add_contrast(this.img[this.index], this.max_val)) {
+        if (random(0, this.max_val) < this.add_contrast(this.img[this.index], this.max_val, exp, dropout)) {
           const i = this.f * (this.index % this.dim + random(-this.rand_move, this.rand_move));
           const j = this.f * (this.index / this.dim + random(-this.rand_move, this.rand_move));
           // console.log(this.index);
@@ -101,12 +101,21 @@ class NoiseImage {
 
 
 function preload() {
-  img_0 = loadImage('./testimages/disp1.png');
+  img_0 = loadImage('./testimages/disp2.png');
 
 }
 
 function setup() {
-  dim_canvas = 1200;
+
+  slider_exp = createSlider(0, 10, 2, 1);
+  slider_exp.position(10, 10);
+  slider_exp.style('width', '80px');
+
+  slider_val = createSlider(0, 1, 0.7, 0.01);
+  slider_val.position(10, 40);
+  slider_val.style('width', '80px');
+
+  dim_canvas = 600;
   dim_image = 600;
 
   createCanvas(dim_canvas, dim_canvas);
@@ -131,29 +140,27 @@ function keyPressed() {
   if (key == 's') {
     saveCanvas('output.png');
   }
+
+  if (key == 'r') {
+    myIm.index = 0;
+    background(0, 0, 0);
+  }
+
+  if (key == 'd') {
+    dim_canvas = 2400;
+    createCanvas(dim_canvas, dim_canvas);
+    img_0.resize(dim_image, dim_image);
+    img_1 = convertBW(img_0);
+    myIm = new NoiseImage(dim_canvas, dim_image, img_1, 0.5, 2.0);
+    background(color(0, 0, 0));
+    myIm.index = 0;
+    background(0, 0, 0);
+  }
 }
 function draw() {
-
-  // // random_pix
-  // frameCount
-  // if (frameCount < numFrames) {
-  //   pix = 2000;
-  //   if (pix < 4000) {
-  //     pix = pix + 2000;
-  //   }
-  //   for (let i = 0; i < pix; i++) {
-  //     myIm.random_pix();
-  //   }
-  // }
-
-  // unifpix
-
-  for (let i = 0; i < 4 * dim_image; i++) {
-    myIm.add_index_pix(10, 255);
+  let exp = slider_exp.value();
+  let drop = slider_val.value();
+  for (let i = 0; i < 10 * dim_image; i++) {
+    myIm.add_index_pix(10, 255, exp, drop);
   }
-  // while (myIm.add_index_pix(4, 255)) {
-
-  // }
-  // saveCanvas('output.png');
-  // noLoop();
 }
